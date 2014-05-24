@@ -1,0 +1,5 @@
+SMS system for Pajas
+Requires:
+* Kohana v3.2 (kohanaframework.org)
+and modules:
+* Database (https://github.com/hemligabyran/pajas-database)
