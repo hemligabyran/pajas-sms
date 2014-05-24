@@ -6,7 +6,6 @@ class Controller_Admin_Smslog extends Admincontroller
 	public function before()
 	{
 		// Set the name of the template to use
-		$this->xslt_stylesheet = 'admin/smslog';
 		xml::to_XML(array('admin_page' => 'SMSlog'), $this->xml_meta);
 	}
 

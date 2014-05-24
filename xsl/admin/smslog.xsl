@@ -46,8 +46,8 @@
 					<th>Received status</th>
 					<th>Receiver</th>
 					<th>Message</th>
-					<th>Lagd i kö</th>
-					<th>Skickat</th>
+					<th>Added to queue</th>
+					<th>Sent</th>
 					<!--th>-</th-->
 				</tr>
 			</thead>
