@@ -91,24 +91,31 @@ class Driver_Sms_Jojka extends Driver_Sms
 			$response_array = json_decode($response, TRUE);
 			if ($response && is_array($response_array) && isset($response_array['status']))
 			{
-				if ($response_array['status'] == 'DELIVERED')
+				if ($response_array['status'] == 'SENDING')
 				{
-					Kohana::$log->add(LOG::DEBUG, 'Response from Jojka SMS Gateway for DLR request, sms_id='.$row['id'].' is='.$response);
-					$dlr_status = 'delivered';
+					// Nothing to do, gatway is sending the message. Status will be delivered next time we ask for it
 				}
 				else
 				{
-					Kohana::$log->add(LOG::ERROR, 'Response from Jojka SMS Gateway for DLR request, sms_id='.$row['id'].' is='.strval($response));
-					$dlr_status = 'failed';
+					if ($response_array['status'] == 'DELIVERED')
+					{
+						Kohana::$log->add(LOG::DEBUG, 'Response from Jojka SMS Gateway for DLR request, sms_id='.$row['id'].' is='.$response);
+						$dlr_status = 'delivered';
+					}
+					else
+					{
+						Kohana::$log->add(LOG::ERROR, 'Response from Jojka SMS Gateway for DLR request, sms_id='.$row['id'].' is='.strval($response));
+						$dlr_status = 'failed';
+					}
+
+					$sql = 'UPDATE sms_queue
+						SET
+							dlr_status = '.$this->pdo->quote($dlr_status).',
+							dlr_received = NOW()
+						WHERE remote_id = '.$row['remote_id'].';';
+
+					$this->pdo->exec($sql);
 				}
-
-				$sql = 'UPDATE sms_queue
-					SET
-						dlr_status = '.$this->pdo->quote($dlr_status).',
-						dlr_received = NOW()
-					WHERE remote_id = '.$row['remote_id'].';';
-
-				$this->pdo->exec($sql);
 			}
 			else
 			{
