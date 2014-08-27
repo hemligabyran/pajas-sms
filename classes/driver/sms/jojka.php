@@ -145,16 +145,31 @@ class Driver_Sms_Jojka extends Driver_Sms
 			if ($row['from'])
 				$post_array['from'] = $row['from'];
 
-			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL,            Kohana::$config->load('sms.jojka.URL'));
-			curl_setopt($ch, CURLOPT_POST,           TRUE);
-			curl_setopt($ch, CURLOPT_POSTFIELDS,     $post_array);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-			$response = curl_exec($ch);
-			curl_close($ch);
+			if (Kohana::$environment === Kohana::PRODUCTION)
+			{
+				$fake_dlr = FALSE;
+				$response = $this->call_gateway($post_array);
+			}
+			else
+			{
+				$allowed_test_numbers = Kohana::$config->load('sms.allowed_test_numbers');
+
+				if ( ! $allowed_test_numbers || ! in_array($post_array['to'], $allowed_test_numbers))
+				{
+					$fake_dlr = TRUE;
+					Log::instance()->add(Log::DEBUG, 'Faked sending sms to msisdn='.$post_array['to']);
+
+					$response = '{"message_id":"FAKE'.$row['id'].'"}';
+				}
+				else
+				{
+					$fake_dlr = FALSE;
+					$response = $this->call_gateway($post_array);
+				}
+			}
 
 			$response_array = json_decode($response, TRUE);
+
 			if ($response && is_array($response_array) && isset($response_array['message_id']))
 			{
 				Kohana::$log->add(LOG::DEBUG, 'Response from Jojka SMS Gateway for sms_id='.$row['id'].' is='.$response);
@@ -168,6 +183,18 @@ class Driver_Sms_Jojka extends Driver_Sms
 					WHERE id = '.$row['id'].';';
 
 				$this->pdo->exec($sql);
+
+				// Fake DLR for fake messages
+				if ($fake_dlr)
+				{
+					$sql = 'UPDATE sms_queue
+						SET
+							dlr_status = \'DELIVERED\',
+							dlr_received = NOW()
+						WHERE id = '.$row['id'].';';
+
+					$this->pdo->exec($sql);
+				}
 
 				$statuses[$row['id']] = 'Success';
 			}
@@ -187,6 +214,20 @@ class Driver_Sms_Jojka extends Driver_Sms
 		$this->pdo->exec('UNLOCK TABLES');
 
 		return $statuses;
+	}
+
+	protected function call_gateway($post_array)
+	{
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL,            Kohana::$config->load('sms.jojka.URL'));
+		curl_setopt($ch, CURLOPT_POST,           TRUE);
+		curl_setopt($ch, CURLOPT_POSTFIELDS,     $post_array);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+		$response = curl_exec($ch);
+		curl_close($ch);
+
+		return $response;
 	}
 
 }
