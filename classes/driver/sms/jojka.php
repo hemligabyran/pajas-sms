@@ -91,7 +91,7 @@ class Driver_Sms_Jojka extends Driver_Sms
 			$response_array = json_decode($response, TRUE);
 			if ($response && is_array($response_array) && isset($response_array['status']))
 			{
-				if ($response_array['status'] == 'SENDING')
+				if ($response_array['status'] == 'SENDING' || $response_array['status'] == 'SENDING_OK')
 				{
 					// Nothing to do, gatway is sending the message. Status will be delivered next time we ask for it
 				}
