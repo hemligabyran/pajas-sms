@@ -145,7 +145,7 @@ class Driver_Sms_Jojka extends Driver_Sms
 			if ($row['from'])
 				$post_array['from'] = $row['from'];
 
-			if (Kohana::$environment === Kohana::PRODUCTION)
+			if (Kohana::$environment == Kohana::PRODUCTION)
 			{
 				$fake_dlr = FALSE;
 				$response = $this->call_gateway($post_array);
