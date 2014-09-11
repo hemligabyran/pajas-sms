@@ -104,7 +104,7 @@ class Driver_Sms_Jojka extends Driver_Sms
 					}
 					else
 					{
-						Kohana::$log->add(LOG::ERROR, 'Response from Jojka SMS Gateway for DLR request, sms_id='.$row['id'].' is='.strval($response));
+						Kohana::$log->add(LOG::ERROR, 'Status != DELIVERED. Response from Jojka SMS Gateway for DLR request, sms_id='.$row['id'].' is='.strval($response));
 						$dlr_status = 'failed';
 					}
 
@@ -119,7 +119,7 @@ class Driver_Sms_Jojka extends Driver_Sms
 			}
 			else
 			{
-				Kohana::$log->add(LOG::ERROR, 'Response from Jojka SMS Gateway for DLR request, sms_id='.$row['id'].' is='.strval($response));
+				Kohana::$log->add(LOG::ERROR, 'Json decode failed. Response from Jojka SMS Gateway for DLR request, sms_id='.$row['id'].' is='.strval($response));
 			}
 		}
 
