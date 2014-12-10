@@ -89,6 +89,7 @@ class Driver_Sms_Jojka extends Driver_Sms
 			curl_close($ch);
 
 			$response_array = json_decode($response, TRUE);
+			$dlr_status     = FALSE;
 			if ($response && is_array($response_array) && isset($response_array['status']))
 			{
 				if ($response_array['status'] == 'SENDING' || $response_array['status'] == 'SENDING_OK')
@@ -107,19 +108,29 @@ class Driver_Sms_Jojka extends Driver_Sms
 						Kohana::$log->add(LOG::ERROR, 'Status != DELIVERED. Response from Jojka SMS Gateway for DLR request, sms_id='.$row['id'].' is='.strval($response));
 						$dlr_status = 'failed';
 					}
-
-					$sql = 'UPDATE sms_queue
-						SET
-							dlr_status = '.$this->pdo->quote($dlr_status).',
-							dlr_received = NOW()
-						WHERE remote_id = '.$row['remote_id'].';';
-
-					$this->pdo->exec($sql);
 				}
 			}
 			else
 			{
 				Kohana::$log->add(LOG::ERROR, 'Json decode failed. Response from Jojka SMS Gateway for DLR request, sms_id='.$row['id'].' is='.strval($response));
+			}
+
+			// If no DLR is received within 3 days, log it as failed
+			if ($dlr_status === FALSE && strtotime($row['sent']) < (time() - 3 * 24 * 3600))
+			{
+				Kohana::$log->add(LOG::ERROR, 'No DLR status received for 3 days or more, setting DLR status failed for sms_id='.$row['id'].'.');
+				$dlr_status = 'failed';
+			}
+
+			if ($dlr_status !== FALSE)
+			{
+				$sql = 'UPDATE sms_queue
+					SET
+						dlr_status = '.$this->pdo->quote($dlr_status).',
+						dlr_received = NOW()
+					WHERE remote_id = '.$row['remote_id'].';';
+
+				$this->pdo->exec($sql);
 			}
 		}
 
