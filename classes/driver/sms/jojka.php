@@ -90,15 +90,15 @@ class Driver_Sms_Jojka extends Driver_Sms
 
 			$response_array = json_decode($response, TRUE);
 			$dlr_status     = FALSE;
-			if ($response && is_array($response_array) && isset($response_array['status']))
+			if ($response && is_array($response_array))
 			{
-				if ($response_array['status'] == 'SENDING' || $response_array['status'] == 'SENDING_OK')
+				if ($response_array == array('SENDING') || $response_array == array('SENDING_OK'))
 				{
 					// Nothing to do, gatway is sending the message. Status will be delivered next time we ask for it
 				}
 				else
 				{
-					if ($response_array['status'] == 'DELIVERED')
+					if ($response_array == array('DELIVERED'))
 					{
 						Kohana::$log->add(LOG::DEBUG, 'Response from Jojka SMS Gateway for DLR request, sms_id='.$row['id'].' is='.$response);
 						$dlr_status = 'delivered';
