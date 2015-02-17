@@ -38,12 +38,12 @@ class Sms
 		return self::driver()->add($to, $msg, $from);
 	}
 
-	public function retrieve_dlrs($amount = 5)
+	public function retrieve_dlrs($amount = 20)
 	{
 		return self::driver()->retrieve_dlrs($amount);
 	}
 
-	public function send($amount = 5)
+	public function send($amount = 20)
 	{
 		return self::driver()->send($amount);
 	}
